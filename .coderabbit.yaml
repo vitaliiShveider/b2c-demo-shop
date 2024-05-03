@@ -2,12 +2,278 @@
 language: "en-US"
 early_access: false
 reviews:
-    profile: "chill"
+    profile: "assertive"
     request_changes_workflow: true
     high_level_summary: true
     poem: true
     review_status: true
     collapse_walkthrough: false
+    path_instructions:
+        -   path: "**/*.php"
+            instructions: "
+Facades should be used only with methods like getFacade.
+Don't create in manually.
+            "
+        -   path: "**/Controller/*.php"
+            instructions: "
+            PHP code should follow next conventions.
+Conventions - A Controller:
+
+The class name has the *Controller suffix
+
+Every Module can have one IndexController which is used if the URL is not specific
+
+Contains usually only public methods which are called \"Actions\". Protected methods are possible to accomplish a better structure but often this is a code smell which should be avoided.
+
+Declares the fully qualified class names of the related Factory, Facade in the class doc block like this:
+    /**
+    * @method \[Organization]\Zed\[Module]\Communication\[Module]CommunicationFactory getFactory()
+    * @method \[Organization]\Zed\[Module]\Business\[Module]FacadeInterface getFacade()
+    */
+    class IndexController extends AbstractController
+Extends (depending on the Application):
+
+    \Spryker\Glue\Kernel\Controller\AbstractController
+
+    \Spryker\Yves\Kernel\Controller\AbstractController
+
+    \Spryker\Zed\Kernel\Communication\Controller\AbstractController ← Except for Gateway Controllers; see Controller (Zed)
+
+Public methods of a Controller:
+
+    Are called \"Action\" and therefore use the *Action() suffix
+
+    Every Controller can have one indexAction() which is used if the URL is not specific
+
+    Don't contain any business logic. Most of the time there is no logic at all (no loops, no if statements).
+
+    Have either no parameter or receive the \Symfony\Component\HttpFoundation\Request object to access the system variables (like GET and POST)
+
+    Received IDs must be casted with the castId() method
+
+Typical uses cases of a Controller Action:
+
+    Receiving data (via the given Request object)
+
+    Validation of input data via a form's isValid() method
+
+Delegation of data to the Module's Facade via this inherited method:
+
+    protected function getFacade()
+
+    Creation of classes which represent Forms or Tables
+
+Adding of flash messages via these inherited methods:
+
+    protected function addSuccessMessage($message, array $data = [])
+    protected function addInfoMessage($message, array $data = [])
+    protected function addErrorMessage($message, array $data = [])
+
+
+
+Sending the response in the right format via these inherited methods:
+    protected function viewResponse(array $data = [])
+    protected function redirectResponse($url, $status = 302, $headers = [])
+    protected function jsonResponse($data = null, $status = 200, $headers = [])
+    protected function streamedResponse($callback = null, $status = 200, $headers = [])
+            "
+        -   path: "**/*DependencyProvider.php"
+            instructions: "
+            PHP code should follow next conventions.
+            Conventions
+Dependency Provider contain no other logic and are stateless
+Only public methods have the provide*() prefix
+provide*() methods MUST only call add*() methods
+add*() methods MUST only introduce a dependency to the Container
+get*() methods MUST only be called inside of the closure for the injection wrapper
+Containers MUST use the Spryker Application API with the set*() method.
+Other prefixes than provide, get, or add: MUST NOT be used. (ie: no \"create\" methods)
+    There is one protected method for each provided class
+    Plugins are added in a separate method per plugin type. Naming schema getFooPlugins().
+    Plugins should be provided as array, even when only a single Plugin is expected. This way we can enforce that a plugin is always optional.
+    Plugin defining methods MUST be considered to be part of the module API (method signature changes lead to major release).
+    Plugin defining methods MUST be tagged with @api tag.
+    All entries in the container use a constant as key. The constant is defined in the dependency provider
+Core-only: Facades, Clients and Services are always wrapped into a Bridge to avoid hard-coding of a specific path of an interface"
+        -   path: "**/*.transfer.xml"
+            instructions:
+                "All new transfers and properties should be marked  strict=\"true\", highlighting any deviations."
+        -   path: "**/*.Plugin.php"
+            instructions:
+                "
+Plugins are classes which are used to realize Inversion-Of-Control in Spryker. So instead of a direct call to another Module's Facade, a Plugin can be provided as an optional and configurable class which provides a specific implementation.
+
+Plugins are the only functional classes which can be instantiated across Modules!
+Conventions - A Plugin
+
+
+is stateless
+
+do no accept constructor parameters.
+
+doesn't contain business logic and just delegate to the underlying Module API (Facade, Client or Service)
+has a doc-block for every method which specifies the behaviour (See RFC: Plugin specification)
+has a class level doc-block tag `@see`, which specifies the list of dependency providers with method name where the current plugin can be used
+has a meaningful and unique name
+Plugin methods MUST use these words: pre and post instead of before, after
+Plugin classes MUST use these words: pre, post, create, update, delete before, after, instead of creator, updator, deleter
+is placed in a sub folder of the /Plugin directory. This sub folder has the name of the Module which consumes the Plugin
+implements an Interface which is provided by an Extension Module
+
+extends (depending on Application):
+
+\Spryker\Client\Kernel\AbstractPlugin
+\Spryker\Glue\Kernel\AbstractPlugin
+\Spryker\Service\Kernel\AbstractPlugin
+\Spryker\Yves\Kernel\AbstractPlugin
+\Spryker\Zed\Kernel\Communication\AbstractPlugin"
+        -   path: "**/*Factory.php"
+            instructions: "
+            PHP code should follow next conventions.
+            The responsibility of a Factory should be to instantiate and to wire up the classes of a Module.
+            Conventions for Factories:
+                - Stateless, there are no properties;
+                - There is no additional logic.
+                - Factories don't implement an interface.
+                - Extend (depending on the application and layer):
+                    \Spryker\Client\Kernel\AbstractFactory
+                    \Spryker\Glue\Kernel\AbstractFactory
+                    \Spryker\Service\Kernel\AbstractServiceFactory
+                    \Spryker\Yves\Kernel\AbstractFactory
+                    \Spryker\Zed\Kernel\Communication\AbstractCommunicationFactory
+                    \Spryker\Zed\Kernel\Business\AbstractBusinessFactory
+                    \Spryker\Zed\Kernel\Persistence\AbstractPersistenceFactory
+                - The class name depends on the Application:
+                    In layered applications like Zed: [Organization]\[Application]\[Module]\[Layer]\[Module][Layer]Factory
+                    In applications without layers like Yves: [Organization]\[Application]\[Module]\]\[Module]Factory
+
+            Methods of a Factory
+                All methods are public.
+                There are two types of methods in a Factory:
+                    (1) Methods which instantiate a class:
+                        - Name: create[Class]()
+                        - Each method makes only one class instantiation (~ no more than one \"new\" per method)
+                    (2) Methods which return a provided external class:
+                        - Name: get[Class]()
+            "
+        -   path: "**/*Config.php"
+            instructions: "
+            PHP code should follow next conventions.
+Conventions for Configs:
+
+Contains the Module specific configuration which is not depending on the environment.
+In addition the Config enables the system wide configuration (e.g. from config_default.php)
+
+- Entries from the environment config can be accessed via: $this->get('key');
+- Extends \Spryker\Zed\Kernel\AbstractBundleConfig
+- public getter methods MUST be introduced to access module configuration and support project extension
+- module configuration values MAY be defined using protected constants (eg: to support \"uses\" phpdoc tag)
+- static:: used everywhere to support extension
+
+Module configs split into two categories:
+    - module layer configuration - can be used only in the related application layer. You can place then in:
+        /Zed/ModuleName/ModuleNameConfig.php
+        /Yves/ModuleName/ModuleNameConfig.php
+        /Client/ModuleName/ModuleNameConfig.php
+        /Service/ModuleName/ModuleNameConfig.php
+        /Glue/ModuleName/ModuleNameConfig.php
+
+    - module shared configuration - can be used across all application layers. You can place them in /Shared/ModuleName/ModuleNameConfig.php.
+
+Module constants:
+- They are located next to the module configuration.
+- They are public constants.
+- They can be accessed directly from layer code.
+- They are consistent across the codebase, and their values are independent from the environment.
+            "
+        -   path: "**/*Mapper.php"
+            instructions: "
+PHP code should follow next conventions.
+
+Mappers can be used for transforming / append provided data into an other structure.
+Convention for method names: map[<SourceEntityName>[To<TargetEntityName>]]($sourceEntity, $targetEntity)
+Note: \"map\" MAY have multiple source entities if it still does NOT violate \"mapping only\" directive
+"
+        -   path: "**/*Expander.php"
+            instructions: "
+Expander can be used to retrieve and append additional data into the existing data structure.
+Convention for method names: expand[With<AdditionalDataExplainer>]($targetEntity)
+Note: \"map\" MAY have multiple source entities if it still does NOT violate \"mapping only\" directive
+"
+        -   path: "**/Plugin/**/*Permission*.php"
+            instructions: "
+            PHP code should follow next conventions.
+Permission plugins are a way to put a scope on the usage of an application during a request lifecycle.
+They all need to implement \Spryker\Shared\PermissionExtension\Dependency\Plugin\PermissionPluginInterface.
+\Spryker\Client\Kernel\PermissionAwareTrait, \Spryker\Glue\Kernel\PermissionAwareTrait, \Spryker\Yves\Kernel\PermissionAwareTrait and \Spryker\Zed\Kernel\PermissionAwareTrait allow for models in those layers to check if a permission is allowed to an application user.
+
+Conventions:
+    When using one of the traits in a model, use a protected constant string to reference the PermissionPlugin that will be used in the model.
+    As an annotation for this string you should add @uses annotation to the PermissionPlugin::KEY string that you will compare against.
+            "
+        -   path: "**/Zed/**/*DependencyProvider.php"
+            instructions: "
+            PHP code should follow next conventions.
+Zed specific conventions:
+    - Extend \Spryker\Zed\Kernel\AbstractBundleDependencyProvider
+    - Has three methods which define to which layer a class is provided:
+        1. public function provideCommunicationLayerDependencies(Container $container)
+        2. public function provideBusinessLayerDependencies(Container $container)
+        3. public function providePersistenceLayerDependencies(Container $container)
+Layer specific rules:
+    From a technical perspective any class can be provided into any layer but there rules that keep the architecture streamlined:
+        - Facades, Clients and Services are usually provided to the Business Layer but can also be provided to the Communication Layer as long at is serves pure GUI-related needs.
+        - Plugins are only provided to the Business Layer and only on Project-level (Plugins are never hard-wired on Core-level).
+        - Query Objects must only be provided to the Persistence Layer.
+"
+        -   path: "**/Zed/**/*Controller.php"
+            instructions: "
+            PHP code should follow next conventions.
+Zed's URLs are related to the code structure:
+Special case: Gateway Controllers
+
+There is a special type of Controllers which represent the Gateway between a Client and Zed. So when you send data from a Client to Zed then this becomes received from a Gateway Controller
+
+Gateway controller responsibilities:
+    - Transform input arguments to facade structure
+    - Transform facade result to client structure
+    - Transform facade exception to client structure
+    - Usually a Module has only one (or none) Gateway Controller
+
+They extend \Spryker\Zed\Kernel\Communication\Controller\AbstractGatewayController
+
+There are two differences to regular Controllers in Zed:
+    (1) Instead of the Request object they get pre-filled Transfer Objects as input parameters
+    (2) Instead of returning the result of a view*() method they simply return a Transfer Object
+            "
+        -   path: "**/Zed/**/*Repository.php"
+            instructions: "
+            PHP code should follow next conventions.
+Repository conventions
+    - Public methods get and return only transfer objects
+    - All queries must be terminated (eg via find(), findOne())
+    - All public methods are exposed in the related interface
+    - Extends \Spryker\Zed\Kernel\Persistence\AbstractRepository
+
+Declare hidden dependencies:
+Sometimes one needs to use data from a joined table. Just hard dependencies should be clarified and explicitly set by a developer, using @module tag in a relevant PHPDoc.
+Example:
+/**
+ * @module Foo, Bar
+ */
+"
+        -   path: "**/Zed/**/*EntityManager.php"
+            instructions: "
+            PHP code should follow next conventions.
+Entity Manager conventions:
+    - All public methods are exposed in the related interface
+    - Public methods have a prefix which defines the functionality of the method, e.g. create*(), delete*(), update*(), ...
+    - Creating, Updating and Deleting functions MUST be separated by concern even if they use internal methods for common code
+    - Only Transfer Objects are used as input parameters
+    - Methods can return void or the saved object as Transfer Object
+    - Extends \Spryker\Zed\Kernel\Persistence\AbstractEntityManager
+"
+
     auto_review:
         enabled: true
         ignore_title_keywords:

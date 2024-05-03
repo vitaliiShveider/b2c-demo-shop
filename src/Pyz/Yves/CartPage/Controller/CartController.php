@@ -7,6 +7,9 @@
 
 namespace Pyz\Yves\CartPage\Controller;
 
+use Generated\Shared\Transfer\CategoryConditionsTransfer;
+use Generated\Shared\Transfer\CategoryCriteriaTransfer;
+use Spryker\Zed\Category\Business\CategoryFacade;
 use SprykerShop\Yves\CartPage\Controller\CartController as SprykerCartController;
 use SprykerShop\Yves\CartPage\Plugin\Router\CartPageRouteProviderPlugin;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -48,6 +51,13 @@ class CartController extends SprykerCartController
         return $this->redirect($request);
     }
 
+    private function testAction(Request $request, $sku): RedirectResponse
+    {
+        parent::removeAction($request, $sku);
+
+        return $this->redirect($request);
+    }
+
     /**
      * @param \Symfony\Component\HttpFoundation\Request $request
      *
@@ -59,6 +69,8 @@ class CartController extends SprykerCartController
             return $this->redirectResponseExternal($request->headers->get(static::REQUEST_HEADER_REFERER));
         }
 
-        return $this->redirectResponseInternal(CartPageRouteProviderPlugin::ROUTE_NAME_CART);
+        (new CategoryFacade())->findCategory((new CategoryCriteriaTransfer())->setCategoryConditions((new CategoryConditionsTransfer())->addIdCategory(1)));
+
+        return $this->redirectResponseInternal(CartPageRouteProviderPlugin::ROUTE_NAME_CART, code: 404);
     }
 }

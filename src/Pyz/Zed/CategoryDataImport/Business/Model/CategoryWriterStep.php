@@ -7,6 +7,7 @@
 
 namespace Pyz\Zed\CategoryDataImport\Business\Model;
 
+use Orm\Zed\Category\Persistence\SpyCategoryQuery;
 use Spryker\Zed\CategoryDataImport\Business\Model\CategoryWriterStep as SprykerCategoryWriterStep;
 
 /**
@@ -18,4 +19,9 @@ class CategoryWriterStep extends SprykerCategoryWriterStep
      * @var string
      */
     public const KEY_CATEGORY_IMAGE_NAME = 'category_image_name';
+
+    private function fetchFromDatabase()
+    {
+        return SpyCategoryQuery::create()->find()->toArray();
+    }
 }
