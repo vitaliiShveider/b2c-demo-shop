@@ -99,6 +99,36 @@ Core-only: Facades, Clients and Services are always wrapped into a Bridge to avo
         -   path: "**/*.transfer.xml"
             instructions:
                 "All new transfers and properties should be marked  strict=\"true\", highlighting any deviations."
+        -   path: "**/*.Plugin.php"
+            instructions:
+                "
+Plugins are classes which are used to realize Inversion-Of-Control in Spryker. So instead of a direct call to another Module's Facade, a Plugin can be provided as an optional and configurable class which provides a specific implementation.
+
+Plugins are the only functional classes which can be instantiated across Modules!
+Conventions - A Plugin
+
+
+is stateless
+
+do no accept constructor parameters.
+
+doesn't contain business logic and just delegate to the underlying Module API (Facade, Client or Service)
+has a doc-block for every method which specifies the behaviour (See RFC: Plugin specification)
+has a class level doc-block tag `@see`, which specifies the list of dependency providers with method name where the current plugin can be used
+has a meaningful and unique name
+Plugin methods MUST use these words: pre and post instead of before, after
+Plugin classes MUST use these words: pre, post, create, update, delete before, after, instead of creator, updator, deleter
+is placed in a sub folder of the /Plugin directory. This sub folder has the name of the Module which consumes the Plugin
+implements an Interface which is provided by an Extension Module
+
+extends (depending on Application):
+
+\Spryker\Client\Kernel\AbstractPlugin
+\Spryker\Glue\Kernel\AbstractPlugin
+\Spryker\Service\Kernel\AbstractPlugin
+\Spryker\Yves\Kernel\AbstractPlugin
+\Spryker\Zed\Kernel\Communication\AbstractPlugin
+                "
     auto_review:
         enabled: true
         ignore_title_keywords:
