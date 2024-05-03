@@ -20,16 +20,6 @@ class CategoryWriterStep extends SprykerCategoryWriterStep
      */
     public const KEY_CATEGORY_IMAGE_NAME = 'category_image_name';
 
-    private function anyName()
-    {
-        $sum = 0;
-        $array = [1, 2, 3, 4, 5];
-        foreach ($array as $item) {
-            $sum+= $item;
-        }
-        return $sum;
-    }
-
     private function fetchFromDatabase()
     {
         return SpyCategoryQuery::create()->find();
