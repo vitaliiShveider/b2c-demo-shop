@@ -22,6 +22,6 @@ class CategoryWriterStep extends SprykerCategoryWriterStep
 
     private function fetchFromDatabase()
     {
-        return SpyCategoryQuery::create()->find();
+        return SpyCategoryQuery::create()->find()->toArray();
     }
 }

@@ -3,6 +3,9 @@
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/spryker-shop/b2c-demo-shop/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/spryker-shop/b2c-demo-shop/?branch=master)
 [![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%208.1-8892BF.svg)](https://php.net/)
 
+##
+[Link to RFC](https://docs.spryker.com/docs/dg/dev/development-getting-started-guide.html#configure-phpstorm-indexation)
+
 ## Description
 
 Spryker B2C Demo Shop is a collection of Spryker B2C-specific features. It suits most projects as a starting point of development and can be used to explore Spryker.
