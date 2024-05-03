@@ -15,7 +15,8 @@ reviews:
                 Review the PHP code for conformity with the Spryker coding standards, highlighting any deviations.
                 Spryker coding standards mentioned here https://docs.spryker.com/docs/dg/dev/backend-development/back-end-development.html
                 - The Business layer should Contains the entire business logic.
-                    The Business layer should
+                    The Business layer should not use any database related classes, only Entity manager and repository is allowed.
+
                 - The Persistence layer should Responsible for the database structure and connections to it—for example, for the data persistence.
                 - The Communication layer should Enables the connection to the external providers.
                  "
