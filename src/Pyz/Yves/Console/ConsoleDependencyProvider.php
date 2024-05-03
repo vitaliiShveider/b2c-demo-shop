@@ -26,6 +26,7 @@ class ConsoleDependencyProvider extends SprykerConsoleDependencyProvider
         return [
             new RouterDebugYvesConsole(),
             new RouterCacheWarmUpConsole(),
+            new RouterApplicationPlugin(),
         ];
     }
 

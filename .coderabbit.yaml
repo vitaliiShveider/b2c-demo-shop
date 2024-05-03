@@ -9,6 +9,93 @@ reviews:
     review_status: true
     collapse_walkthrough: false
     path_instructions:
+        -   path: "**/Controller/*.php"
+            instructions: "
+Conventions - A Controller:
+
+The class name has the *Controller suffix
+
+Every Module can have one IndexController which is used if the URL is not specific
+
+Contains usually only public methods which are called \"Actions\". Protected methods are possible to accomplish a better structure but often this is a code smell which should be avoided.
+
+Declares the fully qualified class names of the related Factory, Facade in the class doc block like this:
+
+
+
+    /**
+    * @method \[Organization]\Zed\[Module]\Communication\[Module]CommunicationFactory getFactory()
+    * @method \[Organization]\Zed\[Module]\Business\[Module]FacadeInterface getFacade()
+    */
+    class IndexController extends AbstractController
+
+
+
+Extends (depending on the Application):
+
+    \Spryker\Glue\Kernel\Controller\AbstractController
+
+    \Spryker\Yves\Kernel\Controller\AbstractController
+
+    \Spryker\Zed\Kernel\Communication\Controller\AbstractController ← Except for Gateway Controllers; see Controller (Zed)
+
+Public methods of a Controller:
+
+    Are called \"Action\" and therefore use the *Action() suffix
+
+    Every Controller can have one indexAction() which is used if the URL is not specific
+
+    Don't contain any business logic. Most of the time there is no logic at all (no loops, no if statements).
+
+    Have either no parameter or receive the \Symfony\Component\HttpFoundation\Request object to access the system variables (like GET and POST)
+
+    Received IDs must be casted with the castId() method
+
+Typical uses cases of a Controller Action:
+
+    Receiving data (via the given Request object)
+
+    Validation of input data via a form's isValid() method
+
+Delegation of data to the Module's Facade via this inherited method:
+
+    protected function getFacade()
+
+    Creation of classes which represent Forms or Tables
+
+Adding of flash messages via these inherited methods:
+
+    protected function addSuccessMessage($message, array $data = [])
+    protected function addInfoMessage($message, array $data = [])
+    protected function addErrorMessage($message, array $data = [])
+
+
+
+Sending the response in the right format via these inherited methods:
+    protected function viewResponse(array $data = [])
+    protected function redirectResponse($url, $status = 302, $headers = [])
+    protected function jsonResponse($data = null, $status = 200, $headers = [])
+    protected function streamedResponse($callback = null, $status = 200, $headers = [])
+            "
+        -   path: "**/*DependencyProvider.php"
+            instructions: "
+            Conventions
+Dependency Provider contain no other logic and are stateless
+Only public methods have the provide*() prefix
+provide*() methods MUST only call add*() methods
+add*() methods MUST only introduce a dependency to the Container
+get*() methods MUST only be called inside of the closure for the injection wrapper
+Containers MUST use the Spryker Application API with the set*() method.
+Other prefixes than provide, get, or add: MUST NOT be used. (ie: no \"create\" methods)
+    There is one protected method for each provided class
+    Plugins are added in a separate method per plugin type. Naming schema getFooPlugins().
+    Plugins should be provided as array, even when only a single Plugin is expected. This way we can enforce that a plugin is always optional.
+    Plugin defining methods MUST be considered to be part of the module API (method signature changes lead to major release).
+    Plugin defining methods MUST be tagged with @api tag.
+    All entries in the container use a constant as key. The constant is defined in the dependency provider
+Core-only: Facades, Clients and Services are always wrapped into a Bridge to avoid hard-coding of a specific path of an interface
+
+    "
         -   path: "**/*.transfer.xml"
             instructions:
                 "All new transfers and properties should be marked  strict=\"true\", highlighting any deviations."
