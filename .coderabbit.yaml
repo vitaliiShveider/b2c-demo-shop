@@ -9,8 +9,14 @@ reviews:
     review_status: true
     collapse_walkthrough: false
     path_instructions:
+        -   path: "**/*.php"
+            instructions: "
+Facades should be used only with methods like getFacade.
+Don't create in manually.
+            "
         -   path: "**/Controller/*.php"
             instructions: "
+            PHP code should follow next conventions.
 Conventions - A Controller:
 
 The class name has the *Controller suffix
@@ -25,9 +31,6 @@ Declares the fully qualified class names of the related Factory, Facade in the c
     * @method \[Organization]\Zed\[Module]\Business\[Module]FacadeInterface getFacade()
     */
     class IndexController extends AbstractController
-
-
-
 Extends (depending on the Application):
 
     \Spryker\Glue\Kernel\Controller\AbstractController
@@ -76,6 +79,7 @@ Sending the response in the right format via these inherited methods:
             "
         -   path: "**/*DependencyProvider.php"
             instructions: "
+            PHP code should follow next conventions.
             Conventions
 Dependency Provider contain no other logic and are stateless
 Only public methods have the provide*() prefix
@@ -125,6 +129,7 @@ extends (depending on Application):
 \Spryker\Zed\Kernel\Communication\AbstractPlugin"
         -   path: "**/*Factory.php"
             instructions: "
+            PHP code should follow next conventions.
             The responsibility of a Factory should be to instantiate and to wire up the classes of a Module.
             Conventions for Factories:
                 - Stateless, there are no properties;
@@ -153,6 +158,7 @@ extends (depending on Application):
             "
         -   path: "**/*Config.php"
             instructions: "
+            PHP code should follow next conventions.
 Conventions for Configs:
 
 Contains the Module specific configuration which is not depending on the environment.
@@ -182,6 +188,8 @@ Module constants:
             "
         -   path: "**/*Mapper.php"
             instructions: "
+PHP code should follow next conventions.
+
 Mappers can be used for transforming / append provided data into an other structure.
 Convention for method names: map[<SourceEntityName>[To<TargetEntityName>]]($sourceEntity, $targetEntity)
 Note: \"map\" MAY have multiple source entities if it still does NOT violate \"mapping only\" directive
@@ -192,12 +200,9 @@ Expander can be used to retrieve and append additional data into the existing da
 Convention for method names: expand[With<AdditionalDataExplainer>]($targetEntity)
 Note: \"map\" MAY have multiple source entities if it still does NOT violate \"mapping only\" directive
 "
-        -   path: "**/Shared/*/*Constants.php"
-            instructions: "
-
-            "
         -   path: "**/Plugin/**/*Permission*.php"
             instructions: "
+            PHP code should follow next conventions.
 Permission plugins are a way to put a scope on the usage of an application during a request lifecycle.
 They all need to implement \Spryker\Shared\PermissionExtension\Dependency\Plugin\PermissionPluginInterface.
 \Spryker\Client\Kernel\PermissionAwareTrait, \Spryker\Glue\Kernel\PermissionAwareTrait, \Spryker\Yves\Kernel\PermissionAwareTrait and \Spryker\Zed\Kernel\PermissionAwareTrait allow for models in those layers to check if a permission is allowed to an application user.
@@ -208,6 +213,7 @@ Conventions:
             "
         -   path: "**/Zed/**/*DependencyProvider.php"
             instructions: "
+            PHP code should follow next conventions.
 Zed specific conventions:
     - Extend \Spryker\Zed\Kernel\AbstractBundleDependencyProvider
     - Has three methods which define to which layer a class is provided:
@@ -222,6 +228,7 @@ Layer specific rules:
 "
         -   path: "**/Zed/**/*Controller.php"
             instructions: "
+            PHP code should follow next conventions.
 Zed's URLs are related to the code structure:
 Special case: Gateway Controllers
 
@@ -241,6 +248,7 @@ There are two differences to regular Controllers in Zed:
             "
         -   path: "**/Zed/**/*Repository.php"
             instructions: "
+            PHP code should follow next conventions.
 Repository conventions
     - Public methods get and return only transfer objects
     - All queries must be terminated (eg via find(), findOne())
@@ -256,6 +264,7 @@ Example:
 "
         -   path: "**/Zed/**/*EntityManager.php"
             instructions: "
+            PHP code should follow next conventions.
 Entity Manager conventions:
     - All public methods are exposed in the related interface
     - Public methods have a prefix which defines the functionality of the method, e.g. create*(), delete*(), update*(), ...
