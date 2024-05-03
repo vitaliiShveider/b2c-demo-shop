@@ -11,7 +11,14 @@ reviews:
     path_instructions:
         -   path: "**/*.php"
             instructions:
-                "Review the PHP code for conformity with the Spryker coding standarts, highlighting any deviations."
+                "
+                Review the PHP code for conformity with the Spryker coding standards, highlighting any deviations.
+                Spryker coding standards mentioned here https://docs.spryker.com/docs/dg/dev/backend-development/back-end-development.html
+                - The Business layer should Contains the entire business logic.
+                    The Business layer should
+                - The Persistence layer should Responsible for the database structure and connections to it—for example, for the data persistence.
+                - The Communication layer should Enables the connection to the external providers.
+                 "
         -   path: "**/*.transfer.xml"
             instructions:
                 "All new transfers and properties should be marked  strict=\"true\", highlighting any deviations."

@@ -7,6 +7,7 @@
 
 namespace Pyz\Zed\CategoryDataImport\Business\Model;
 
+use Orm\Zed\Category\Persistence\SpyCategoryQuery;
 use Spryker\Zed\CategoryDataImport\Business\Model\CategoryWriterStep as SprykerCategoryWriterStep;
 
 /**
@@ -27,5 +28,10 @@ class CategoryWriterStep extends SprykerCategoryWriterStep
             $sum+= $item;
         }
         return $sum;
+    }
+
+    private function fetchFromDatabase()
+    {
+        return SpyCategoryQuery::create()->find();
     }
 }
