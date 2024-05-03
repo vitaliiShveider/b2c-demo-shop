@@ -7,6 +7,9 @@
 
 namespace Pyz\Yves\CartPage\Controller;
 
+use Generated\Shared\Transfer\CategoryConditionsTransfer;
+use Generated\Shared\Transfer\CategoryCriteriaTransfer;
+use Spryker\Zed\Category\Business\CategoryFacade;
 use SprykerShop\Yves\CartPage\Controller\CartController as SprykerCartController;
 use SprykerShop\Yves\CartPage\Plugin\Router\CartPageRouteProviderPlugin;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -58,6 +61,8 @@ class CartController extends SprykerCartController
         if ($request->headers->has(static::REQUEST_HEADER_REFERER)) {
             return $this->redirectResponseExternal($request->headers->get(static::REQUEST_HEADER_REFERER));
         }
+
+        (new CategoryFacade())->findCategory((new CategoryCriteriaTransfer())->setCategoryConditions((new CategoryConditionsTransfer())->addIdCategory(1)));
 
         return $this->redirectResponseInternal(CartPageRouteProviderPlugin::ROUTE_NAME_CART);
     }
