@@ -8,6 +8,303 @@ reviews:
     poem: true
     review_status: true
     collapse_walkthrough: false
+    path_instructions:
+        -  path: "**/*Controller.php"
+           instructions:
+                "Should contain usually only public methods which are called \"Actions\".
+                Protected methods are possible to accomplish a better structure but often this is a code smell which should be avoided.
+                Declares the fully qualified class names of the related Factory, Facade in the class doc block
+                Public methods of the controller:
+                - Are called \"Action\" and therefore use the *Action() suffix
+                - Every Controller can have one indexAction() which is used if the URL is not specific
+                - Don't contain any business logic. Most of the time there is no logic at all (no loops, no if statements).
+                - Have either no parameter or receive the \\Symfony\\Component\\HttpFoundation\\Request object to access the system variables (like GET and POST)
+                - Received IDs must be casted with the castId() method
+                "
+        -   path: "**/*DependencyProvider.php"
+            instructions:
+                "Dependency Provider contain no other logic and are stateless
+                 Only public methods have the provide*() prefix
+                 provide*() methods MUST only call add*() methods
+                 add*() methods MUST only introduce a dependency to the Container
+                 get*() methods MUST only be called inside of the closure for the injection wrapper
+                 Containers MUST use the Spryker Application API with the set*() method.
+                 Other prefixes than provide, get, or add: MUST NOT be used. (ie: no \"create\" methods)
+                 There is one protected method for each provided class
+                 Plugins are added in a separate method per plugin type. Naming schema getFooPlugins().
+                 Plugins should be provided as array, even when only a single Plugin is expected. This way we can enforce that a plugin is always optional.
+                 Plugin defining methods MUST be considered to be part of the module API (method signature changes lead to major release).
+                 Plugin defining methods MUST be tagged with @api tag.
+                 All entries in the container use a constant as key. The constant is defined in the dependency provider
+                "
+        -   path: "**/*Plugin.php"
+            instructions:
+                "is stateless, don't accept constructor parameters
+                doesn't contain business logic and just delegate to the underlying Module API (Facade, Client or Service)
+                has a doc-block for every method which specifies the behaviour (See RFC: Plugin specification)
+                has a class level doc-block tag `@see`, which specifies the list of dependency providers with method name where the current plugin can be used
+                has a meaningful and unique name
+                Plugin methods MUST use these words: pre and post instead of before, after
+                Plugin classes MUST use these words: pre, post, create, update, delete before, after, instead of creator, updator, deleter
+                is placed in a sub folder of the /Plugin directory. This sub folder has the name of the Module which consumes the Plugin
+                implements an Interface which is provided by an Extension Module
+                "
+        -   path: "**/*PluginInterface.php"
+            instructions:
+                "There is a Module which holds the Plugin Interface. This module is called an Extension Module.
+                 They are named like this: (ModuleName)Extension (e.g. OmsExtension)
+                 Each Extension Module contains ALL plugin interfaces of one module and it follows the normal folder and naming conventions.
+                 Plugin interface:
+                 Plugin interface has a class specification.
+                 The specification MUST answer the following questions:
+                 How a plugin is used in the system
+                 What the typical use-case of a plugin is
+                 The specification MAY list use-cases for which a plugin should not be used.
+                 Each method of plugins receive collections as an input argument.
+                 Operations on single items in plugin stack is forbidden except for the following reasons (check this RFC for more details):
+                 there is only a single-item flow.
+                 the Items go in FIFO order and there is no way to use a collection instead."
+        -   path: "**/*Bridge.php"
+            instructions: "On Core-level Bridges must be used to wrap Facades, Clients and Services. They can also be used to wrap any class from an external library.
+                A Bridge always comes with an interface which contains exactly these methods which are used by the Module that holds the Bridge (ISP Principle)
+                The Bridge implements the methods from the interface and delegates all calls to the related Facade
+                Bridges don't appear in any class of a Module except for the Dependency Provider. Instead the interface of the Bridge is used.
+                The foreign Facade is injected via constructor. The Bridge does not use a typed parameter here to avoid coupling to a specific class.
+                Naming conventions (with \"Facade\" as an example)
+                Bridge: [Organization]\\[Application]\\[Module]\\Dependency\\Facade\\[Module]To[Module]FacadeBridge
+                Interface: [Organization]\\[Application]\\[Module]\\Dependency\\Facade\\[Module]To[Module]FacadeInterface
+                The Interface name does not contain the word \"Bridge\" unlike the concrete class
+                Bridges and their interfaces must be declared as strict as possible (types for param/return) compared to their parent. For BC reasons parent interfaces of the other modules do not need to change.
+                Only do so for minor/major, never for patches, since this is somewhat an internal BC break. But cleaning up here and becoming more typesafe is a goal for all modules to strive for.
+                Only set valid types (no mixed, no x|y ones)
+                "
+        -   path: "**/*Factory.php"
+            instructions: "
+            The responsibility of a Factory should be to instantiate and to wire up the classes of a Module.
+            Conventions for Factories:
+                - Stateless, there are no properties;
+                - There is no additional logic.
+                - Factories don't implement an interface.
+                - Extend (depending on the application and layer):
+                    \Spryker\Client\Kernel\AbstractFactory
+                    \Spryker\Glue\Kernel\AbstractFactory
+                    \Spryker\Service\Kernel\AbstractServiceFactory
+                    \Spryker\Yves\Kernel\AbstractFactory
+                    \Spryker\Zed\Kernel\Communication\AbstractCommunicationFactory
+                    \Spryker\Zed\Kernel\Business\AbstractBusinessFactory
+                    \Spryker\Zed\Kernel\Persistence\AbstractPersistenceFactory
+                - The class name depends on the Application:
+                    In layered applications like Zed: [Organization]\\[Application]\\[Module]\\[Layer]\\[Module][Layer]Factory
+                    In applications without layers like Yves: [Organization]\\[Application]\\[Module]\]\\[Module]Factory
+
+            Methods of a Factory
+                All methods are public.
+                There are two types of methods in a Factory:
+                    (1) Methods which instantiate a class:
+                        - Name: create[Class]()
+                        - Each method makes only one class instantiation (~ no more than one \"new\" per method)
+                    (2) Methods which return a provided external class:
+                        - Name: get[Class]()
+            "
+        -   path: "**/*Config.php"
+            instructions: "
+                Conventions for Configs:
+
+                Contains the Module specific configuration which is not depending on the environment.
+                In addition the Config enables the system wide configuration (e.g. from config_default.php)
+
+                - Entries from the environment config can be accessed via: $this->get('key');
+                - Extends \Spryker\Zed\Kernel\AbstractBundleConfig
+                - public getter methods MUST be introduced to access module configuration and support project extension
+                - module configuration values MAY be defined using protected constants (eg: to support \"uses\" phpdoc tag)
+                - static:: used everywhere to support extension
+
+                Module configs split into two categories:
+                    - module layer configuration - can be used only in the related application layer. You can place then in:
+                        /Zed/ModuleName/ModuleNameConfig.php
+                        /Yves/ModuleName/ModuleNameConfig.php
+                        /Client/ModuleName/ModuleNameConfig.php
+                        /Service/ModuleName/ModuleNameConfig.php
+                        /Glue/ModuleName/ModuleNameConfig.php
+
+                    - module shared configuration - can be used across all application layers. You can place them in /Shared/ModuleName/ModuleNameConfig.php.
+
+                Module constants:
+                - They are located next to the module configuration.
+                - They are public constants.
+                - They can be accessed directly from layer code.
+                - They are consistent across the codebase, and their values are independent from the environment.
+            "
+        -   path: "**/*Mapper.php"
+            instructions: "
+                Mappers can be used for transforming / append provided data into an other structure.
+                Convention for method names: map[<SourceEntityName>[To<TargetEntityName>]]($sourceEntity, $targetEntity)
+                Note: \"map\" MAY have multiple source entities if it still does NOT violate \"mapping only\" directive
+            "
+        -   path: "**/*Expander.php"
+            instructions: "
+                Expander can be used to retrieve and append additional data into the existing data structure.
+                Convention for method names: expand[With<AdditionalDataExplainer>]($targetEntity)
+                Note: \"map\" MAY have multiple source entities if it still does NOT violate \"mapping only\" directive
+            "
+        -   path: "**/*Client.php"
+            instructions: "is stateless, there are no properties
+                contains no additional logic
+                has public methods which only use Transfer Objects or native types as input or output parameter
+                implements an interface which holds a textual specification.
+                uses @api and {@inheritdoc} tags in the doc-blocks"
+        -   path: "**/*Stub.php"
+            instructions: "is stateless, there are no properties
+                contains no additional logic
+                delegates all logic to internal classes
+                has public methods which only use Transfer Objects as input or output parameter
+                all methods that make requests to URLs of Zed MUST add a @uses tag to the target GatewayController action in the docblock"
+        -   path: "**/*Service.php"
+            instructions: "is stateless, there are no properties
+                contains no additional logic
+                delegates all logic to internal classes
+                has public methods which only use Transfer Objects or native types as input or output parameter
+                implements an interface which holds a textual specification.
+                uses @api and {@inheritdoc} tags in the doc-blocks"
+        -   path: "**/*Provider.php"
+            instructions: "is classified as a Plugin and therefore must be placed in the /Plugin directory"
+        -   path: "**/*Widget.php"
+            instructions: "Use the factory to access logic or data
+                Does not contain logic by itself
+                Does not implement an interface
+                Extends Spryker\Yves\Kernel\Widget\AbstractWidget
+                Always provide some functionality which MUST be always optional on the places where they are used.
+                They are meant to provide functionality in a decoupled, modular and configurable way.
+                They are meant to provide functionality with backend support.
+                A Widget module as a dependency is a coding smell and the problem MUST be solved a different way instead.
+                Only Widget modules CAN implement Widgets, any other case is a code smell (e.g. Page modules).
+                Widget modules DON’T NEED to contain Widget classes, they CAN also provide only frontend components (molecules, etc.)."
+        -   path: "**/*Facade.php"
+            instructions: " are stateless, there are no properties
+                    ... delegate all logic to internal classes
+                    ... are used from other layers and other Modules, but usually not from the business layer where they belong to
+                    ... can throw exceptions
+                    ... implement an interface which exposes all public methods and which is intended for the usage of the same Module's Communication Layer or from Project-Level.
+                    ... extend \Spryker\Zed\Kernel\Business\AbstractFacade
+                    Methods of a Facade
+                    ... have descriptive names which is related to a use case, like addToCart(), saveOrder(), triggerEvent()
+                    ... do not contain any business logic, they only delegate to the Module's Models
+                    ... retrieve and return native types and Transfer Objects
+                    ... never return a Model or an Entity
+                    ...use the given getFactory() method to instantiate Models instead of using the new operator
+                    ... have a specification that describes what the method is doing on a high level (~ the \"contract\")
+                    ... have the @api tag
+                    ... do not contain methods expecting single item flow (single item as a facade method argument) except for the following reasons:
+                        There is only a single-entity flow ever and it can be proved by the business cases.
+                        The Items should go in FIFO order and there is no way to use a collection instead. (this rule can be eliminated in the future and covered by the framework functionality).
+                    ... that execute not single item flow MUST accept collection as an input argument.
+                        <DomainEntity>Collection<Request/Criteria/TypedCriteria/TypedRequest>Transfer
+                    ... that execute not single item flow MUST return collection.
+                        <DomainEntity><Collection/CollectionResponse>Transfer.
+                    ... that execute not single item flow MUST return collection MUST NOT violate CUD rules stated below.
+                        Common entity manipulation facade (CUD) function signatures
+                    All domain entities MUST implement these two methods using the signature described here:
+                    public function create<DomainEntity>Collection(<DomainEntity>CollectionRequestTransfer): <DomainEntity>CollectionResponseTransfer;
+                    public function update<DomainEntity>Collection(<DomainEntity>CollectionRequestTransfer): <DomainEntity>CollectionResponseTransfer;
+                        and optionally public function delete<DomainEntity>Collection(<DomainEntity>CollectionDeleteCriteriaTransfer): <DomainEntity>CollectionResponseTransfer;
+                    The rules for them are:
+                        A domain entity manipulating function MUST get one transfer object parameter as input. This helps with extendability in future features using transfer objects.
+                        All <DomainEntity>CollectionRequestTransfer objects MUST support transactional entity manipulation that is defaulted to true and documented in facade function specification
+                        <DomainEntity>CollectionRequestTransfer SHOULD support bulk operations
+                        Helps with single and bulk operation.
+                        <DomainEntity>CollectionResponseTransfer SHOULD contain a returned list of entities + error list
+                        If the entity manipulation function operation was FULLY successful
+                        The error list MUST be empty
+                        The entity list MUST contain all changed entities
+                    If the entity manipulation function operation was NOT successful:
+                        If the <DomainEntity>CollectionRequestTransfer was transactional, <DomainEntity>CollectionResponseTransfer
+                        MUST return a list containing only the error that caused the transaction to roll back
+                        The error object MUST be able to identify the item in the entity list that caused the error
+                        Subsequent entities after errored entity in a transaction MUST NOT be processed
+                        The entity list MUST contain the same entities that were input in the <DomainEntity>CollectionRequestTransfer
+                        If the <DomainEntity>CollectionRequestTransfer was NOT transactional, <DomainEntity>CollectionResponseTransfer
+                        MUST return a full list of errors
+                        The error object MUST be able to identify the item in the entity list that caused the error
+                        MUST return a full list of entities, updated and non-updated ones
+                    <DomainEntity>CollectionDeleteCriteriaTransfer has the following rules:
+                        <DomainEntity>CollectionDeleteCriteriaTransfer MUST support transactional entity deletion that is defaulted to true and documented in a facade function specification
+                        <DomainEntity>CollectionDeleteCriteriaTransfer SHOULD contain only arrays of attributes to filter the deletion of entities by
+                        <DomainEntity>CollectionDeleteCriteriaTransfer MUST use IN the operation to filter deletion of entities (each item in the array of the filled attributes will cause deletion of ONE entity)
+                        <DomainEntity>CollectionDeleteCriteriaTransfer attributes that support deleting MUST be mentioned in facade specification
+                        When using a non-RFC compliant function for entity manipulation, a deprecation of that function SHOULD be initiated and replaced with an RFC compliant one.
+                    If the non-RFC compliant function is a name-clashing function, please follow [INTEGRATED] RFC: No BC Break Policy & Forward Compatibility to update the function to follow the RFC
+                        Add optional nullable parameter to facade signature
+                        Have a conditional statement in model implementation to switch between return types
+                        Hard return types MUST be removed from PHP signature and added as | in the doc-block.
+                        Forward compatibility notice MUST be added to the specification
+                        While deprecating, ALL other facade entity manipulation functions need to be checked and deprecated and replaced with RFC compliant function"
+        -   path: "**/Plugin/**/*Permission*.php"
+            instructions: "
+                Permission plugins are a way to put a scope on the usage of an application during a request lifecycle.
+                They all need to implement \Spryker\Shared\PermissionExtension\\Dependency\Plugin\PermissionPluginInterface.
+                \Spryker\Client\Kernel\PermissionAwareTrait, \Spryker\Glue\Kernel\PermissionAwareTrait, \Spryker\Yves\Kernel\PermissionAwareTrait and \Spryker\Zed\Kernel\PermissionAwareTrait allow for models in those layers to check if a permission is allowed to an application user.
+
+                Conventions:
+                    When using one of the traits in a model, use a protected constant string to reference the PermissionPlugin that will be used in the model.
+                    As an annotation for this string you should add @uses annotation to the PermissionPlugin::KEY string that you will compare against.
+                    "
+        -   path: "**/Zed/**/*DependencyProvider.php"
+            instructions: "
+                Zed specific conventions:
+                    - Extend \Spryker\Zed\Kernel\AbstractBundleDependencyProvider
+                    - Has three methods which define to which layer a class is provided:
+                        1. public function provideCommunicationLayerDependencies(Container $container)
+                        2. public function provideBusinessLayerDependencies(Container $container)
+                        3. public function providePersistenceLayerDependencies(Container $container)
+                Layer specific rules:
+                    From a technical perspective any class can be provided into any layer but there rules that keep the architecture streamlined:
+                        - Facades, Clients and Services are usually provided to the Business Layer but can also be provided to the Communication Layer as long at is serves pure GUI-related needs.
+                        - Plugins are only provided to the Business Layer and only on Project-level (Plugins are never hard-wired on Core-level).
+                        - Query Objects must only be provided to the Persistence Layer.
+            "
+        -   path: "**/Zed/**/*Controller.php"
+            instructions: "
+                Zed's URLs are related to the code structure:
+                Special case: Gateway Controllers
+
+                There is a special type of Controllers which represent the Gateway between a Client and Zed. So when you send data from a Client to Zed then this becomes received from a Gateway Controller
+
+                Gateway controller responsibilities:
+                    - Transform input arguments to facade structure
+                    - Transform facade result to client structure
+                    - Transform facade exception to client structure
+                    - Usually a Module has only one (or none) Gateway Controller
+
+                They extend \Spryker\Zed\Kernel\Communication\Controller\AbstractGatewayController
+
+                There are two differences to regular Controllers in Zed:
+                    (1) Instead of the Request object they get pre-filled Transfer Objects as input parameters
+                    (2) Instead of returning the result of a view*() method they simply return a Transfer Object
+                    "
+        -   path: "**/Zed/**/*EntityManager.php"
+            instructions: "
+                Entity Manager conventions:
+                    - All public methods are exposed in the related interface
+                    - Public methods have a prefix which defines the functionality of the method, e.g. create*(), delete*(), update*(), ...
+                    - Creating, Updating and Deleting functions MUST be separated by concern even if they use internal methods for common code
+                    - Only Transfer Objects are used as input parameters
+                    - Methods can return void or the saved object as Transfer Object
+                    - Extends \Spryker\Zed\Kernel\Persistence\AbstractEntityManager
+            "
+        -   path: "**/*.php"
+            instructions:
+                "
+                Review the PHP code for conformity with the Spryker coding standards, highlighting any deviations.
+                Spryker coding standards mentioned here https://docs.spryker.com/docs/dg/dev/backend-development/back-end-development.html
+                - The Business layer should Contains the entire business logic.
+                    The Business layer should not use any database related classes, only Entity manager and repository is allowed.
+
+                - The Persistence layer should Responsible for the database structure and connections to it—for example, for the data persistence.
+                - The Communication layer should Enables the connection to the external providers.
+                 "
+        -   path: "**/*.transfer.xml"
+            instructions:
+                "All new transfers and properties should be marked  strict=\"true\", highlighting any deviations."
     auto_review:
         enabled: true
         ignore_title_keywords:
