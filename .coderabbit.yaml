@@ -9,125 +9,184 @@ reviews:
     review_status: true
     collapse_walkthrough: false
     path_instructions:
-        -   path: "**/*Controller.php"
-            instructions: |
-                Spryker Controller conventions:
-                - Only public methods with *Action suffix are allowed as entry points.
-                - No business logic, loops, or if statements in controllers.
-                - Use castId() for IDs, only receive Request or no parameters.
-                - Use getFactory(), getFacade(), getClient() for dependencies.
-                - GatewayController is reserved for remote Client requests.
-        -   path: "**/*DependencyProvider.php"
-            instructions: |
-                Spryker DependencyProvider conventions:
-                - Only provide*, add*, and get* methods allowed.
-                - Use late-binding closures for container::set().
-                - All constants must be public.
-                - Only inject dependencies via add* methods, one per method.
-                - Facades must be wrapped in a Bridge.
-                - Plugins must be tagged with @api if get* methods are defined.
-        -   path: "**/*Facade.php"
-            instructions: |
-                Spryker Facade conventions:
-                - Only delegate to underlying models, no business logic.
-                - All methods must use Transfer objects or native types as arguments and return values.
-                - Methods must be public and have descriptive names.
-                - Must implement a FacadeInterface with full specification.
-                - All public methods must have @api and {@inheritdoc} tags.
-        -   path: "**/*FacadeInterface.php"
-            instructions: |
-                Spryker FacadeInterface conventions:
-                - Must specify all public methods of the Facade.
-                - Each method must have a clear specification and @api tag.
-        -   path: "**/*Factory.php"
-            instructions: |
-                Spryker Factory conventions:
-                - Only instantiate or wire dependencies, no external logic.
-                - No interfaces for Factory classes.
-                - Methods must be public, named create*() or get*().
-                - Use dependency provider constants for module dependencies.
-        -   path: "**/Model/*.php"
-            instructions: |
-                Spryker Model conventions:
-                - Grouped by activity (e.g., Writers, Readers).
-                - Dependencies injected via constructor, use interfaces.
-                - No private methods, no direct instantiation except Transfer objects.
-                - No cross-module model inheritance or direct usage.
-        -   path: "**/*Config.php"
-            instructions: |
-                Spryker Config conventions:
-                - Getter methods (get*) for config values, not direct constant access.
-                - Module config constants should be protected, env config constants public and UPPERCASE.
-                - Use static:: for module config, constants prefixed with MODULE_NAME for env config.
-        -   path: "**/*.transfer.xml"
-            instructions: |
-                Spryker Transfer conventions:
-                - All new transfers and properties must be marked strict="true".
-                - Use correct naming: *Attributes only for Glue API modules.
-        -   path: "**/*.schema.xml"
-            instructions: |
-                Spryker Schema conventions:
-                - Table names must use spy_ prefix and follow entity/relation/search/storage format.
-                - Primary key: id_entity_name, foreign key: fk_remote_entity.
-                - Use phpName attribute for foreign keys.
-                - uuid field for external communication, unique, nullable by default.
-        -   path: "**/Plugin/**/*.php"
-            instructions: |
-                Spryker Plugin conventions:
-                - Permission plugins must implement PermissionPluginInterface.
-                - Use @uses annotation for permission keys in models.
-                - Providers and Routers in Yves must extend AbstractYvesControllerProvider or AbstractRouter.
-        -   path: "**/Persistence/Propel/Schema/*.xml"
-            instructions: |
-                Spryker Persistence Schema conventions:
-                - Use correct table/column naming, spy_ prefix, phpName, uuid, and foreign key conventions.
-        -   path: "**/Transfer/*.php"
-            instructions: |
-                Spryker Transfer Object conventions:
-                - Only getters and setters, no logic.
-                - Generated from transfer XML, not hand-written.
-        -   path: "**/Repository.php"
-            instructions: |
-                Spryker Repository conventions:
-                - Only retrieve data, no changes.
-                - Use Entities/Query Objects, return Transfer objects or native types.
-                - Must implement a RepositoryInterface.
-        -   path: "**/EntityManager.php"
-            instructions: |
-                Spryker EntityManager conventions:
-                - Only create*, update*, delete* methods, separated by concern.
-                - Must implement an interface, use Transfer objects as input/output.
-        -   path: "**/Widget/*.php"
-            instructions: |
-                Spryker Widget conventions:
-                - Must be stateless, reusable, and follow atomic design principles.
-        -   path: "**/Theme/**"
-            instructions: |
-                Spryker Theme conventions:
-                - Use atomic design: atoms, molecules, organisms, templates, views.
-                - Only one-level theme inheritance: current > default.
-        -   path: "**/navigation.xml"
-            instructions: |
-                Spryker navigation.xml conventions:
-                - Use <pages> node for navigation items, <bundle> for module, <icon> for Font Awesome icon.
+        # General Architectural Guidelines
         -   path: "**/*.php"
             instructions: |
-                General Spryker Architectural Convention:
-                - Each module must have clear separation of layers: Persistence, Business, Communication, and optionally Presentation.
-                - Business logic must reside in the Business layer, not in Controllers or Communication layer.
-                - Communication layer should only orchestrate calls to the Facade and must not contain business logic.
-                - All business logic must be accessed via the Facade.
-                - Factories are responsible for creating business objects and injecting dependencies.
-                - Custom business logic should be placed in the custom code bucket (src/), not in the core or vendor directories.
-                - When extending modules, use code bucket inheritance principles.
-                - Module, class, and method names must follow Spryker naming conventions.
-                - Each module should be self-contained and not depend on project-specific code outside its own namespace.
-                - For data that needs to be available in the frontend, use the Publish & Sync mechanism.
-    auto_review:
-        enabled: true
-        ignore_title_keywords:
-            - "WIP"
-            - "DO NOT MERGE"
-        drafts: false
+                **General Spryker Architectural Convention:**
+                - Components must be placed in their correct application layer directories (e.g., `Zed`, `Yves`, `Glue`) and logical layers (e.g., `Presentation`, `Communication`, `Business`, `Persistence`). Refer to Spryker's directory architecture.
+                - Ensure components inherit from the appropriate abstract class in the `Kernel` module. For core module development, direct extension from the abstract class is mandatory.
+                - Components should be stateless. Avoid introducing mutable instance properties that could lead to non-deterministic behavior. Review for any stateful logic, especially in module and core module development where it's a strict convention.
+
+        # Controller Conventions
+        -   path: "**/Controller/*.php"
+            instructions: |
+                **Spryker Controller Conventions:**
+                - All public methods that serve as action entry points must be suffixed with `Action` (e.g., `indexAction()`). For module/core module development, *only* `Action` methods should be public.
+                - Controller `Action` methods must either have no parameters or receive only the `\Symfony\Component\HttpFoundation\Request` object. No other parameters are allowed.
+                - Controllers should orchestrate syntactical validation and delegate logic. Avoid placing complex business logic directly within controller methods. Controllers are for request/response handling and delegation, not business rule implementation.
+
+        # Dependency Provider Conventions
+        -   path: "**/Dependency/DependencyProvider.php"
+            instructions: |
+                **Spryker Dependency Provider Conventions:**
+                - When setting dependencies with `container::set()`, ensure a late-binding closure is used. For individual instances, use `Container::factory()`.
+                - All `provide` methods in Dependency Providers must call their parent `provide` method.
+                - For module/core development, Dependency Providers should only define `provide`, `get`, or `add` methods. `add` and `get` methods must be `protected`. `provide` methods can only call `add` methods.
+                - For module/core development, `add`, `provide`, and `get` methods in Dependency Providers must have `$container` as their only argument.
+                - For module/core development, each `add` method in a Dependency Provider should introduce only one dependency.
+                - For module/core development, facades must be wrapped in a Bridge when wired through the Dependency Provider.
+                - Dependency constant names should be descriptive, following `[COMPONENT_NAME]_[MODULE_NAME]` or `PLUGINS_[PLUGIN_INTERFACE_NAME]` patterns.
+                - For module/core development, avoid `protected` items in module configuration due to potential backward compatibility issues (guideline).
+
+        # Entity Conventions
+        -   path: "**/Persistence/Propel/Generated/Entity/*.php"
+            instructions: |
+                **Spryker Entity Conventions:**
+                - Entity classes must be generated via Persistence Schema and should not be manually modified.
+                - Entities must not be exposed or used directly at the Facade layer or above.
+                - For module/core development, Entities should only be instantiated within the Persistence Layer. Verify they adhere to the 3-tier class hierarchy.
+                - Avoid complex business logic within Entity classes. Manager classes are preferred for handling complex operations. Entities should primarily represent data models and not contain extensive logic.
+
+        # Entity Manager Conventions
+        -   path: "**/Business/EntityManager/*.php"
+            instructions: |
+                **Spryker Entity Manager Conventions (Module/Core Module Development):**
+                - Public methods must be prefixed with `create*()`, `delete*()`, or `update*()` to describe their functionality.
+                - Ensure create, update, and delete operations are separated by concern within Entity Manager classes.
+                - Entity Manager classes must define and implement an interface for their public methods.
+                - Methods must receive only Transfer Objects as input and return `void` or saved Transfer Objects. They must use Entities and/or Query Objects for database operations.
+
+        # Facade Design Pattern Conventions
+        -   path: "**/Business/Facade/*.php"
+            instructions: |
+                **Spryker Facade Conventions:**
+                - Facade methods must use Transfer Objects or native types for arguments and always return a value.
+                - For module/core Facades: Methods must have descriptive names, use `getFactory()` for instantiation, contain only delegation logic, be `public`, define and implement an interface, and include `@api` and `{@inheritdoc}` tags.
+                - For module/core Facades: Avoid new `QueryContainer` functionality. Avoid single-item-flow methods unless explicitly justified for scalability reasons.
+                - For module/core Facades: Ensure multi-item-flow and CUD (Create, Update, Delete) methods follow specific naming patterns (e.g., `find*Collection`, `create*`, `update*`, `delete*`).
+                - Consider using `Service` facade functionalities for data transformation. While `Query Containers` can be used in project development, prioritize transitioning to Entity Manager and Repository patterns (guideline).
+
+        # Factory Conventions
+        -   path: "**/Business/Factory/*.php"
+            instructions: |
+                **Spryker Factory Conventions (Module/Core Module Development):**
+                - Factories should solely orchestrate object instantiation and should not define or implement interfaces.
+                - Public methods must be named `create[Class]()` for new objects or `get[Class]()` for wired dependencies, utilizing constants from the Dependency Provider.
+
+        # Mapper / Expander / Hydrator Conventions
+        -   path: "**/Business/Mapper/*.php"
+            instructions: |
+                **Spryker Mapper / Expander / Hydrator Conventions (Module/Core Module Development):**
+                - For Mappers: Methods must be named `map[<SourceEntityName>[To<TargetEntityName>]()]`. For Expanders, methods must be named `expand[With<description>]()`.
+                - Mappers should be free of complex logic and data resolving. They can only use module configurations, other mappers, or lightweight Service calls as dependencies.
+                - Avoid using the keywords `hydrator` or `hydration` in Mapper/Expander classes or methods.
+        -   path: "**/Persistence/Mapper/*.php"
+            instructions: |
+                **Spryker Persistence Mapper Conventions (Module/Core Module Development):**
+                - Persistence Mappers must be located in the Persistence layer and named `[Entity]Mapper.php` or `[Module]Mapper.php`.
+                - Avoid using the keywords `hydrator` or `hydration` in Mapper/Expander classes or methods.
+
+        # Model Conventions
+        -   path: "**/Business/Model/*.php"
+            instructions: |
+                **Spryker Model Conventions:**
+                - Model dependencies should be limited to facades or components from the same module (Models, Repository, Entity Manager, Config). Models must not directly interact with Models from other modules.
+                - For module/core Models: Dependencies must be injected via constructor. Models should not instantiate any objects other than Transfer Objects. Group models by activity and avoid generic names. Models must define and implement an interface, refer to dependencies by their interface, and avoid `private` methods.
+
+        # Module Configurations Conventions
+        -   path: "**/Config/*.php"
+            instructions: |
+                **Spryker Module Configurations Conventions (Module/Core Module Development):**
+                - Getter methods for configuration values must be prefixed with `get`.
+                - Environment configuration constants must be `public`, UPPERCASE, match the key, and be prefixed with `{MODULE_NAME}`.
+                - Module configuration constants must be `protected`. Module configuration should exclusively rely on `static::`.
+
+        # Persistence Schema Conventions
+        -   path: "**/Persistence/Propel/Schema/*.xml"
+            instructions: |
+                **Spryker Persistence Schema Conventions:**
+                - Tables must have an integer ID primary key named `id_[domain_entity_name]`. Foreign key columns must follow `fk_[remote_entity]` format.
+                - Table names must follow specific formats (Business, Relation, Search, Storage entities). For module/core development, table and schema prefixes must be `spy_`.
+                - Ensure `uuid` field is defined for external communication. Foreign key definitions must include the `phpName` attribute.
+
+        # Query Object Conventions
+        -   path: "**/Persistence/Query/*.php"
+            instructions: |
+                **Spryker Query Object Conventions (Module/Core Module Development):**
+                - Hidden hard dependencies introduced via `join` operations must be explicitly defined using the `@module [RemoteModule1][,[...]]` tag in the docblock.
+
+        # Repository Conventions
+        -   path: "**/Persistence/Repository/*.php"
+            instructions: |
+                **Spryker Repository Conventions (Module/Core Module Development):**
+                - Repositories are for data retrieval only; they must not modify data. Use Entities and/or Query Objects for data retrieval.
+                - The class must define and implement an interface for its public methods. Public methods must receive and return only Transfer Objects, and return either a collection or a single item.
+                - For project development Repositories: While native PHP types can be used for input/output, it's not recommended as it can lead to overly granular methods. Prefer Transfer Objects (guideline).
+
+        # Theme Conventions (Widget Naming)
+        -   path: "**/Theme/**/*.twig"
+            instructions: |
+                **Spryker Theme/Widget Naming Convention:**
+                - Ensure that each `Widget` has a unique name across all features to prevent conflicts.
+        -   path: "**/Theme/**/*.php"
+            instructions: |
+                **Spryker Theme/Widget Naming Convention:**
+                - Ensure that each `Widget` has a unique name across all features to prevent conflicts.
+
+        # Transfer Object Conventions
+        -   path: "**/Shared/*/Transfer/*.xml"
+            instructions: |
+                **Spryker Transfer Object Conventions:**
+                - Transfer Objects must be defined in the transfer XML file. The suffixes `Attributes`, `ApiAttributes`, and `BackendApiAttributes` are reserved. `EntityTransfers` must not be defined manually, and the `Entity` suffix is reserved for auto-generated `EntityTransfers`.
+        -   path: "**/Shared/*/Transfer/*.php"
+            instructions: |
+                **Spryker Transfer Object Conventions (Module/Core Module Development):**
+                - A module can only use Transfer Objects and properties declared within the same module.
+                - Transfer Objects can be directly instantiated anywhere in the codebase (guideline).
+
+        # Widget Conventions
+        -   path: "**/Yves/Widget/*.php"
+            instructions: |
+                **Spryker Widget Conventions (Module/Core Module Development):**
+                - Widgets must contain only lightweight, display-related logic. Use the inherited Factory method for complex logic. The Widget's module must not appear as a dependency.
+                - Widget implementation must occur in a dedicated widget module. Ensure `Widget` calls account for optional enablement.
+        -   path: "**/Zed/Widget/*.php"
+            instructions: |
+                **Spryker Widget Conventions (Module/Core Module Development):**
+                - Widgets must contain only lightweight, display-related logic. Use the inherited Factory method for complex logic. The Widget's module must not appear as a dependency.
+                - Widget implementation must occur in a dedicated widget module. Ensure `Widget` calls account for optional enablement.
+
+        # Zed Stub Conventions
+        -   path: "**/Client/ZedRequest/Stub/*.php"
+            instructions: |
+                **Spryker Zed Stub Conventions:**
+                - Zed Stub call endpoints must be implemented in a Zed application Gateway Controller. Zed Stubs must inherit from `\Spryker\Client\ZedRequest\Stub\ZedRequestStub`.
+                - For module/core Zed Stubs: Methods must contain only delegation logic, be `public`, use Transfer Objects for input/output, and include an `@uses` tag with the targeted Gateway Controller action.
+
+        # Plugin Interface Standards
+        -   path: "**/Extension/*Extension/Dependency/Plugin/*.php"
+            instructions: |
+                **Spryker Plugin Interface Standards:**
+                - Plugin interfaces must be defined in extension modules. These modules must be suffixed with `Extension` (e.g., `CompanyExtension`) and follow regular module architecture. Extension modules should only contain Plugin Interfaces and the Shared application layer.
+                - Plugin interface methods must receive input items as a collection (e.g., `array`, `Traversable`, `TransferCollection`) for scalability reasons.
+                - Avoid single-item operations in plugin stack methods unless strictly necessary (e.g., unavoidable single-item flow, FIFO requirement without collections). Prefer collections for input (guideline).
+                - Ensure the Plugin interface class specification clearly explains its usage and typical use cases in the docblock (guideline).
+
+        # Plugin Conventions
+        -   path: "**/Plugin/*.php"
+            instructions: |
+                **Spryker Plugin Conventions:**
+                - Plugins must not contain business logic. All business logic should be delegated to underlying models, preferably instantiated via a Factory.
+                - Plugin method names must use `pre` and `post` (e.g., `preSave`, `postProcess`) instead of `before` and `after`.
+                - Plugin class names must use `pre`, `post`, `create`, `update`, and `delete` (e.g., `PreSavePlugin`, `CreateOrderPlugin`) instead of `creator`, `updater`, and `deleter`.
+                - All Plugin classes must implement a Plugin Interface provided by an extension module.
+                - Plugin class names should be unique and descriptive, clearly indicating the plugin's behavior to facilitate discoverability (guideline).
+
+auto_review:
+    enabled: true
+    ignore_title_keywords:
+        - "WIP"
+        - "DO NOT MERGE"
+    drafts: false
 chat:
     auto_reply: true
